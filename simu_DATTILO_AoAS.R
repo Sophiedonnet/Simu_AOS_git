@@ -2,7 +2,7 @@
 if (Sys.info()['nodename']=='PORTDONNET'){
   direc <- "D:/WORK_ALL/RECHERCHE/TRAVAUX_RECHERCHE/Avner-Pierre/Ecologie/Code/MultipartiteCodes"
 }else{
-  direc <- "~/WORK_ALL/RECHERCHE/TRAVAUX_RECHERCHE/Avner-Pierre/MULTIPARTITE/CODES/SIMU_PAPIER_AOS"
+  direc <- "~/WORK_ALL/RECHERCHE/TRAVAUX_RECHERCHE/Avner-Pierre/MULTIPARTITE/CODES/SIMU_PAPIER_AOS/Simu_AOS_git/"
 }
 
 
@@ -95,7 +95,7 @@ dirSaveSimuData <- 'res_simu_AoAS/res_simu_AoAS_DATTILO/param2/data'
 
 #
 # # #---------------- ESTIMATION ------------------------------------
- dirSaveSimuRes <- 'res_simu_AoAS/res_simu_AoAS_DATTILO/param2/res_MBM'
+dirSaveSimuRes <- 'res_simu_AoAS/res_simu_AoAS_DATTILO/param2/res_MBM'
 # for (i in 1:nSimu)
 #  {
 #  print(i)
@@ -210,11 +210,13 @@ names(ARI_FG1) = c('ARI','Estimated_K_1')
 
 
 
-g <- ggplot(ARI_FG1, aes(x=Estimated_K_1, y=ARI)) + geom_boxplot() + geom_jitter(shape = 16, position=position_jitter(0.2))
+g <- ggplot(ARI_FG1, aes(x=Estimated_K_1, y=ARI)) + geom_boxplot() + geom_jitter(shape = 16, size=3,position=position_jitter(0.2))
 g <- g + scale_x_discrete(expression(hat(K)[1]))
-g <- g + ylab(expression(paste('ARI for Z' ^'1'),sep=' '))
+g <- g + ylab(expression(paste('ARI for Z' ^'1'),sep=' ')) +  theme(text = element_text(size = 20)) 
 g
-ggsave("ARI_simu_DATTILO.png",width = 20, height = 20, units = "cm")
+
+save_plot  = "/home/donnet/Dropbox/Multiplex/Ecologie/article/StatisticalModeling"
+ggsave(paste(save_plot,"ARI_simu_DATTILO.png",sep='/'),width = 20, height = 20, units = "cm")
 
 
 #-------------------------------------------------------------------------------
@@ -263,7 +265,7 @@ mat_true_param <- rbind(c(NA,vec_pi[-(1:truev_K[1,1])]),mat_true_param)
 
 
 
-#--------------------------------------------------- 
+#--------------- TABLE BIais and RMSE -------------------------------- 
 MSE <- vapply(1:length(w),function(i){(all_param_estim[i,,]- mat_true_param)^2},mat_true_param)
 MSE <- apply(MSE,c(1,2),mean)
 RMSE <- sqrt(MSE)
@@ -341,7 +343,7 @@ bp <- bp + geom_point(data = table_param_true,aes(y =True,x=x),shape=17,  color=
 #bp <- bp + facet_grid(FGrow + Blockrow ~ FGcol + Blockcol,shrink = TRUE,scales="free_y",switch = "y")
 bp <- bp + facet_grid(Krow ~ Kcol,shrink = TRUE,scales="free_y",switch = "y")
 bp <- bp +  scale_y_continuous(breaks = c(0.2,0.5,1),position='right')
-
+bp <- bp + theme(text = element_text(size = 20))
 bp
 ggsave("boxplot_simu_Dattilo.png",width = 20, height = 20, units = "cm")
 
