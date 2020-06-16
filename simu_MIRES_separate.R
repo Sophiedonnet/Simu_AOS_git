@@ -16,10 +16,17 @@ E[1,] = c(1,1)
 E[2,] = c(1,2)
 nnet <- 2
 typeInter = c('diradj','inc')
+v_distrib = rep('bernoulli',2)
 
 
+dirSaveSimuData <- 'res_simu_AoAS/res_simu_AoAS_MIRES/param1/data'
 dirSaveSimuRes <- 'res_simu_AoAS/res_simu_AoAS_MIRES/param1/res_MBM'
 
+nSimu = 100
+
+truev_K <- v_K_estimJoin <- resComparJoin  <- matrix(0, nSimu, nFG)
+resComparRel <- v_K_estimRel <- matrix(0, nSimu, 1)
+resComparInv <- v_K_estimInv <- matrix(0, nSimu, nFG)
 
 
 for (i in 1:nSimu)
@@ -29,8 +36,99 @@ for (i in 1:nSimu)
   namedata  <- paste('datasim',i,'.Rdata',sep = "")
   load(file = paste(dirSaveSimuData,namedata,sep = '/' ))
   listNet <- datasim$list_Net
-  # estim
-  res_estim <- multipartiteBM(listNet, namesFG = namesFG, v_distrib = v_distrib , v_Kmin = 1 , v_Kmax = 10 , v_Kinit = c(1,1), initBM = TRUE, save = FALSE , verbose = FALSE,nbCores = 10)
+  trueZ <- datasim$classif
+  truev_K[i, ] <-
+    vapply(1:nFG, function(q) {
+      length(unique(trueZ[[q]]))
+    }, 1)
+
+  # MBM reload saved estimation
   nameres  <- paste('resMBM_',i,'.Rdata',sep = "")
-  save(res_estim, file = paste(dirSaveSimuRes,nameres,sep = '/' ))
+  load(file = paste(dirSaveSimuRes, nameres, sep = '/'))
+  estimZ <- res_estim$fittedModel[[1]]$paramEstim$Z
+  resComparJoin[i, ] <-  comparClassif(trueZ, estimZ)
+  v_K_estimJoin[i, ] <- res_estim$fittedModel[[1]]$paramEstim$v_K
+
+  ## separated BM
+  ### farmer
+  res_estimRel <- multipartiteBM(listNet[1], namesFG = namesFG[1], v_distrib = v_distrib[1] , v_Kmin = 1 , v_Kmax = 10 , v_Kinit = 1, initBM = TRUE, save = FALSE , verbose = FALSE,nbCores = 10)
+  estimZ <- res_estimRel$fittedModel[[1]]$paramEstim$Z
+  resComparRel[i,] <- comparClassif(trueZ[1], estimZ)
+  v_K_estimRel[i,] <- res_estimRel$fittedModel[[1]]$paramEstim$v_K
+
+
+  ### Inventory
+  res_estimInv <- multipartiteBM(listNet[2], namesFG = namesFG[1:2], v_distrib = v_distrib[2] , v_Kmin = 1 , v_Kmax = 10 , v_Kinit = c(1,1), initBM = TRUE, save = FALSE , verbose = FALSE,nbCores = 10)
+  estimZ <- res_estimInv$fittedModel[[1]]$paramEstim$Z
+  resComparInv[i,] <- comparClassif(trueZ, estimZ)
+  v_K_estimInv[i,] <- res_estimInv$fittedModel[[1]]$paramEstim$v_K
 }
+
+#save(v_K_estimJoin,resComparJoin,resComparRel,v_K_estimRel,resComparInv,v_K_estimInv,file="res_simu_AoAS/comparisonJoinSepMIRES.Rdata")
+
+##### plotting
+library(reshape2)
+library(ggplot2)
+
+
+dfARIfarm = data.frame(Join = resComparJoin[,1],Rel = resComparRel[,1],Inv=resComparInv[,1])
+dfARIfarm = melt(dfARIfarm,value.name = "AUC",variable.name = "Model")
+ggplot(dfARIfarm,aes(x=Model,y=AUC)) +geom_boxplot()
+
+
+dfARIplant = data.frame(Join = resComparJoin[,2],Inv=resComparInv[,2])
+dfARIplant = melt(dfARIplant,value.name = "AUC",variable.name = "Model")
+ggplot(dfARIplant,aes(x=Model,y=AUC)) +geom_boxplot()
+
+
+
+unique.vK.estim <- unique.matrix(v_K_estimJoin)
+tab <- rep(0, nrow(unique.vK.estim))
+for (i in 1:nrow(unique.vK.estim)) {
+  test <-
+    matrix(
+      unique.vK.estim[i, ],
+      ncol = nFG,
+      nrow = nrow(v_K_estimJoin),
+      byrow = T
+    )
+  tab[i] <- sum(rowSums(test == v_K_estimJoin) == nFG)
+}
+library(xtable)
+xtable(cbind(unique.vK.estim, t(t(tab))))
+
+
+unique.vK.estim <- unique.matrix(v_K_estimInv)
+tab <- rep(0, nrow(unique.vK.estim))
+for (i in 1:nrow(unique.vK.estim)) {
+  test <-
+    matrix(
+      unique.vK.estim[i, ],
+      ncol = nFG,
+      nrow = nrow(v_K_estimInv),
+      byrow = T
+    )
+  tab[i] <- sum(rowSums(test == v_K_estimInv) == nFG)
+}
+library(xtable)
+xtable(cbind(unique.vK.estim, t(t(tab))))
+
+
+unique.vK.estim <- unique.matrix(v_K_estimRel)
+tab <- rep(0, nrow(unique.vK.estim))
+for (i in 1:nrow(unique.vK.estim)) {
+  test <-
+    matrix(
+      unique.vK.estim[i, ],
+      ncol = 1,
+      nrow = nrow(v_K_estimRel),
+      byrow = T
+    )
+  tab[i] <- sum(rowSums(test == v_K_estimRel) ==1)
+}
+library(xtable)
+xtable(cbind(unique.vK.estim, t(t(tab))))
+
+
+
+
