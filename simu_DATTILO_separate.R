@@ -31,7 +31,12 @@ nSimu = 100
 
 truev_K <- v_K_estimJoin <- resComparJoin  <- matrix(0, nSimu, nFG)
 resComparPlFl <- v_K_estimPlFl <- matrix(0, nSimu, 2)
+resComparPlAn <- v_K_estimPlAn <- matrix(0, nSimu, 2)
+resComparPlSe <- v_K_estimPlSe <- matrix(0, nSimu, 2)
+
 resComparPlFlAn <- v_K_estimPlFlAn <- matrix(0, nSimu, 3)
+resComparPlFlSe <- v_K_estimPlFlSe <- matrix(0, nSimu, 3)
+resComparPlAnSe <- v_K_estimPlAnSe <- matrix(0, nSimu, 3)
 
 for (i in 1:nSimu)
 {
@@ -51,19 +56,74 @@ for (i in 1:nSimu)
 
 
   ## Plant Flovis
-  res_estim <- multipartiteBM(list_Net[1], namesFG = namesFG[1:2], v_distrib = v_distrib[1] , v_Kmin = 1 , v_Kmax = 10 , v_Kinit = c(1,1,1,1)[1:2], initBM = TRUE, save = FALSE , verbose = FALSE,nbCores = 10)
+  iNet = 1
+  iFG = c(1,2)
+  res_estim <- multipartiteBM(list_Net[iNet], namesFG = namesFG[iFG], v_distrib = v_distrib[iNet] , v_Kmin = 1 , v_Kmax = 10 , v_Kinit = c(1,1,1,1)[iFG], initBM = TRUE, save = FALSE , verbose = FALSE,nbCores = 10)
   estimZ <- res_estim$fittedModel[[1]]$paramEstim$Z
-  resComparPlFl[i,] <- comparClassif(trueZ[1:2], estimZ)
+  resComparPlFl[i,] <- comparClassif(trueZ[iFG], estimZ)
   v_K_estimPlFl[i,] <- res_estim$fittedModel[[1]]$paramEstim$v_K
 
-  ## Plant Flovis Ant
-  res_estim <- multipartiteBM(list_Net[1:2], namesFG = namesFG[1:3], v_distrib = v_distrib[1:2] , v_Kmin = 1 , v_Kmax = 10 , v_Kinit = c(1,1,1,1)[1:3], initBM = TRUE, save = FALSE , verbose = FALSE,nbCores = 10)
+
+  ## Plant Ant
+  iNet = 2
+  iFG = c(1,3)
+  res_estim <- multipartiteBM(list_Net[iNet], namesFG = namesFG[iFG], v_distrib = v_distrib[iNet] , v_Kmin = 1 , v_Kmax = 10 , v_Kinit = c(1,1,1,1)[iFG], initBM = TRUE, save = FALSE , verbose = FALSE,nbCores = 10)
   estimZ <- res_estim$fittedModel[[1]]$paramEstim$Z
-  resComparPlFlAn[i,] <- comparClassif(trueZ[1:3], estimZ)
+  resComparPlAn[i,] <- comparClassif(trueZ[iFG], estimZ)
+  v_K_estimPlAn[i,] <- res_estim$fittedModel[[1]]$paramEstim$v_K
+
+
+  ## Plant Seed
+  iNet = 3
+  iFG = c(1,4)
+  res_estim <- multipartiteBM(list_Net[iNet], namesFG = namesFG[iFG], v_distrib = v_distrib[iNet] , v_Kmin = 1 , v_Kmax = 10 , v_Kinit = c(1,1,1,1)[iFG], initBM = TRUE, save = FALSE , verbose = FALSE,nbCores = 10)
+  estimZ <- res_estim$fittedModel[[1]]$paramEstim$Z
+  resComparPlSe[i,] <- comparClassif(trueZ[iFG], estimZ)
+  v_K_estimPlSe[i,] <- res_estim$fittedModel[[1]]$paramEstim$v_K
+
+
+
+  ## Plant Flovis Ant
+  iNet = 1:2
+  iFG = 1:3
+  res_estim <- multipartiteBM(list_Net[iNet], namesFG = namesFG[iFG], v_distrib = v_distrib[iNet] , v_Kmin = 1 , v_Kmax = 10 , v_Kinit = c(1,1,1,1)[iFG], initBM = TRUE, save = FALSE , verbose = FALSE,nbCores = 10)
+  estimZ <- res_estim$fittedModel[[1]]$paramEstim$Z
+  resComparPlFlAn[i,] <- comparClassif(trueZ[iFG], estimZ)
   v_K_estimPlFlAn[i,] <- res_estim$fittedModel[[1]]$paramEstim$v_K
+
+
+  ## Plant Flovis Seed
+  iNet = c(1,3)
+  iFG = c(1,2,4)
+  res_estim <- multipartiteBM(list_Net[iNet], namesFG = namesFG[iFG], v_distrib = v_distrib[iNet] , v_Kmin = 1 , v_Kmax = 10 , v_Kinit = c(1,1,1,1)[iFG], initBM = TRUE, save = FALSE , verbose = FALSE,nbCores = 10)
+  estimZ <- res_estim$fittedModel[[1]]$paramEstim$Z
+  resComparPlFlSe[i,] <- comparClassif(trueZ[iFG], estimZ)
+  v_K_estimPlFlSe[i,] <- res_estim$fittedModel[[1]]$paramEstim$v_K
+
+
+  ## Plant Ant Seed
+  iNet = c(2,3)
+  iFG = c(1,3,4)
+  res_estim <- multipartiteBM(list_Net[iNet], namesFG = namesFG[iFG], v_distrib = v_distrib[iNet] , v_Kmin = 1 , v_Kmax = 10 , v_Kinit = c(1,1,1,1)[iFG], initBM = TRUE, save = FALSE , verbose = FALSE,nbCores = 10)
+  estimZ <- res_estim$fittedModel[[1]]$paramEstim$Z
+  resComparPlAnSe[i,] <- comparClassif(trueZ[iFG], estimZ)
+  v_K_estimPlAnSe[i,] <- res_estim$fittedModel[[1]]$paramEstim$v_K
+
+
+
 }
 
-#save(v_K_estimJoin,resComparJoin,resComparPlFl,v_K_estimPlFl,resComparPlFlAn,v_K_estimPlFlAn,file="res_simu_AoAS/comparisonJoinSepDattilo.Rdata")
+save(v_K_estimJoin,resComparJoin,
+     resComparPlFl,v_K_estimPlFl,
+     resComparPlAn,v_K_estimPlAn,
+     resComparPlSe,v_K_estimPlSe,
+     resComparPlFlAn,v_K_estimPlFlAn,
+     resComparPlFlSe,v_K_estimPlFlSe,
+     resComparPlAnSe,v_K_estimPlAnSe,
+     file="res_simu_AoAS/comparisonJoinSepDattilo2.Rdata")
+
+
+
 
 ##### plotting
 library(reshape2)
@@ -71,14 +131,14 @@ library(ggplot2)
 library(plyr)
 
 dfARIPlant = data.frame(PlFl = resComparPlFl[,1],PlFlAn=resComparPlFlAn[,1],PlFlAnSe = resComparJoin[,1])
-dfARIPlant = melt(dfARIPlant,value.name = "AUC",variable.name = "Model")
+dfARIPlant = melt(dfARIPlant,value.name = "ARI",variable.name = "Model")
 #dfARIPlant$Model =revalue(dfARIPlant$Model, c("PlFl"="PlFl", "PlFlAn"="PlFlAn","Join"="PlFlSe"))
 #dfARIPlant$Model = factor(dfARIPlant$Model, c("PlFl","PlFlAn","PlFlSe"))
 ggplot(dfARIPlant,aes(x=Model,y=AUC)) +geom_boxplot()
 
 
 dfARIFlovis = data.frame(PlFl=resComparPlFl[,2],PlFlAn=resComparPlFlAn[,2],PlFlAnSe = resComparJoin[,2])
-dfARIFlovis = melt(dfARIFlovis,value.name = "AUC",variable.name = "Model")
+dfARIFlovis = melt(dfARIFlovis,value.name = "ARI",variable.name = "Model")
 ggplot(dfARIFlovis,aes(x=Model,y=AUC)) +geom_boxplot()
 
 

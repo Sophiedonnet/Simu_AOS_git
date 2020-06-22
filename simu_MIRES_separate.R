@@ -66,19 +66,27 @@ for (i in 1:nSimu)
 
 #save(v_K_estimJoin,resComparJoin,resComparRel,v_K_estimRel,resComparInv,v_K_estimInv,file="res_simu_AoAS/comparisonJoinSepMIRES.Rdata")
 
+
+
+load("res_simu_AoAS/comparisonJoinSepMIRES.Rdata")
+
 ##### plotting
 library(reshape2)
 library(ggplot2)
+library(gridExtra)
+
+dfARIfarm = data.frame(Rel = resComparRel[,1],Inv=resComparInv[,1],RelInv = resComparJoin[,1])
+dfARIfarm = melt(dfARIfarm,value.name = "ARI",variable.name = "Data")
+p1=ggplot(dfARIfarm,aes(x=Data,y=ARI)) +geom_boxplot() +theme_bw() + ylim(c(0,1)) + ggtitle("Farmers clustering")
 
 
-dfARIfarm = data.frame(Join = resComparJoin[,1],Rel = resComparRel[,1],Inv=resComparInv[,1])
-dfARIfarm = melt(dfARIfarm,value.name = "AUC",variable.name = "Model")
-ggplot(dfARIfarm,aes(x=Model,y=AUC)) +geom_boxplot()
+dfARIplant = data.frame(Inv=resComparInv[,2],RelInv = resComparJoin[,2])
+dfARIplant = melt(dfARIplant,value.name = "ARI",variable.name = "Data")
+p2 =ggplot(dfARIplant,aes(x=Data,y=ARI)) +geom_boxplot() +theme_bw() + ylim(c(0,1)) + ggtitle("Species clustering")
 
-
-dfARIplant = data.frame(Join = resComparJoin[,2],Inv=resComparInv[,2])
-dfARIplant = melt(dfARIplant,value.name = "AUC",variable.name = "Model")
-ggplot(dfARIplant,aes(x=Model,y=AUC)) +geom_boxplot()
+pdf("~/Dropbox/Multiplex/Ecologie/article/StatisticalModeling/review1/Paper_and_Supplementary/MiresClustering.pdf")
+grid.arrange(p1,p2,nrow=1)
+dev.off()
 
 
 
@@ -95,7 +103,7 @@ for (i in 1:nrow(unique.vK.estim)) {
   tab[i] <- sum(rowSums(test == v_K_estimJoin) == nFG)
 }
 library(xtable)
-xtable(cbind(unique.vK.estim, t(t(tab))))
+xtable(cbind(unique.vK.estim, t(t(tab))),digits=0)
 
 
 unique.vK.estim <- unique.matrix(v_K_estimInv)
@@ -111,7 +119,7 @@ for (i in 1:nrow(unique.vK.estim)) {
   tab[i] <- sum(rowSums(test == v_K_estimInv) == nFG)
 }
 library(xtable)
-xtable(cbind(unique.vK.estim, t(t(tab))))
+xtable(cbind(unique.vK.estim, t(t(tab))),digits=0)
 
 
 unique.vK.estim <- unique.matrix(v_K_estimRel)
@@ -127,7 +135,7 @@ for (i in 1:nrow(unique.vK.estim)) {
   tab[i] <- sum(rowSums(test == v_K_estimRel) ==1)
 }
 library(xtable)
-xtable(cbind(unique.vK.estim, t(t(tab))))
+xtable(cbind(unique.vK.estim, t(t(round(tab)))),digits=0)
 
 
 
