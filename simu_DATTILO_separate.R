@@ -113,32 +113,189 @@ for (i in 1:nSimu)
 
 }
 
-save(v_K_estimJoin,resComparJoin,
-     resComparPlFl,v_K_estimPlFl,
-     resComparPlAn,v_K_estimPlAn,
-     resComparPlSe,v_K_estimPlSe,
-     resComparPlFlAn,v_K_estimPlFlAn,
-     resComparPlFlSe,v_K_estimPlFlSe,
-     resComparPlAnSe,v_K_estimPlAnSe,
-     file="res_simu_AoAS/comparisonJoinSepDattilo2.Rdata")
+# save(v_K_estimJoin,resComparJoin,
+#      resComparPlFl,v_K_estimPlFl,
+#      resComparPlAn,v_K_estimPlAn,
+#      resComparPlSe,v_K_estimPlSe,
+#      resComparPlFlAn,v_K_estimPlFlAn,
+#      resComparPlFlSe,v_K_estimPlFlSe,
+#      resComparPlAnSe,v_K_estimPlAnSe,
+#      file="res_simu_AoAS/comparisonJoinSepDattilo2.Rdata")
 
 
 
+load("res_simu_AoAS/comparisonJoinSepDattilo2.Rdata")
 
 ##### plotting
 library(reshape2)
 library(ggplot2)
 library(plyr)
+library(gridExtra)
 
 dfARIPlant = data.frame(PlFl = resComparPlFl[,1],PlFlAn=resComparPlFlAn[,1],PlFlAnSe = resComparJoin[,1])
 dfARIPlant = melt(dfARIPlant,value.name = "ARI",variable.name = "Model")
 #dfARIPlant$Model =revalue(dfARIPlant$Model, c("PlFl"="PlFl", "PlFlAn"="PlFlAn","Join"="PlFlSe"))
 #dfARIPlant$Model = factor(dfARIPlant$Model, c("PlFl","PlFlAn","PlFlSe"))
-ggplot(dfARIPlant,aes(x=Model,y=AUC)) +geom_boxplot()
+ggplot(dfARIPlant,aes(x=Model,y=ARI)) +geom_boxplot()
 
 
 dfARIFlovis = data.frame(PlFl=resComparPlFl[,2],PlFlAn=resComparPlFlAn[,2],PlFlAnSe = resComparJoin[,2])
 dfARIFlovis = melt(dfARIFlovis,value.name = "ARI",variable.name = "Model")
-ggplot(dfARIFlovis,aes(x=Model,y=AUC)) +geom_boxplot()
+ggplot(dfARIFlovis,aes(x=Model,y=ARI)) +geom_boxplot()
+
+
+
+dfARIPlant = data.frame(PlFl = resComparPlFl[,1],PlAn = resComparPlAn[,1],PlSe = resComparPlSe[,1],
+                         PlFlAn=resComparPlFlAn[,1],PlFlSe=resComparPlFlSe[,1],PlAnSe=resComparPlAnSe[,1],
+                         PlFlAnSe = resComparJoin[,1])
+dfARIPlant = melt(dfARIPlant,value.name = "ARI",variable.name = "Data")
+dfARIPlant$Nnetworks = factor(c(rep(1:2,each=300),rep(3,100)))
+
+p1=ggplot(dfARIPlant,aes(x=Data,y=ARI,fill=Nnetworks)) +geom_boxplot()+theme_bw()+ggtitle("Plants clustering")+guides(fill=F)
+
+
+dfARIFlovis = data.frame(PlFl = resComparPlFl[,2],
+                        PlFlAn=resComparPlFlAn[,2],PlFlSe=resComparPlFlSe[,2],
+                        PlFlAnSe = resComparJoin[,2])
+dfARIFlovis = melt(dfARIFlovis,value.name = "ARI",variable.name = "Data")
+dfARIFlovis$Nnetworks = factor(c(rep(1,each=100),rep(2,200),rep(3,100)))
+p2=ggplot(dfARIFlovis,aes(x=Data,y=ARI,fill=Nnetworks)) +geom_boxplot()+theme_bw() +ggtitle("Floral visitor clustering")+theme(legend.position="left")
+
+
+pdf("~/Dropbox/Multiplex/Ecologie/article/StatisticalModeling/review1/Paper_and_Supplementary/DattiloClustering.pdf",width=10)
+grid.arrange(p1,p2,nrow=1)
+dev.off()
+
+
+dfARIAnt = data.frame(PlAn = resComparPlAn[,2],
+                      PlFlAn=resComparPlFlAn[,3],PlAnSe=resComparPlAnSe[,2],
+                      PlFlAnSe = resComparJoin[,3])
+dfARIAnt = melt(dfARIAnt,value.name = "ARI",variable.name = "Data")
+dfARIAnt$Nnetworks = factor(c(rep(1,each=100),rep(2,200),rep(3,100)))
+ggplot(dfARIAnt,aes(x=Data,y=ARI,fill=Nnetworks)) +geom_boxplot()+theme_bw()
+
+
+dfARISeed = data.frame(PlSe = resComparPlSe[,2],
+                        PlFlSe=resComparPlFlSe[,3],PlAnSe=resComparPlAnSe[,3],
+                        PlFlAnSe = resComparJoin[,4])
+dfARISeed = melt(dfARISeed,value.name = "ARI",variable.name = "Data")
+dfARISeed$Nnetworks = factor(c(rep(1,each=100),rep(2,200),rep(3,100)))
+ggplot(dfARISeed,aes(x=Data,y=ARI,fill=Nnetworks)) +geom_boxplot()+theme_bw()
+
+
+
+## selected number of blocks
+
+unique.vK.estim <- unique.matrix(v_K_estimJoin)
+tab <- rep(0, nrow(unique.vK.estim))
+for (i in 1:nrow(unique.vK.estim)) {
+  test <-
+    matrix(
+      unique.vK.estim[i, ],
+      ncol = nFG,
+      nrow = nrow(v_K_estimJoin),
+      byrow = T
+    )
+  tab[i] <- sum(rowSums(test == v_K_estimJoin) == nFG)
+}
+library(xtable)
+xtable(cbind(unique.vK.estim, t(t(tab))),digits=0)
+
+
+unique.vK.estim <- unique.matrix(v_K_estimPlFl)
+tab <- rep(0, nrow(unique.vK.estim))
+for (i in 1:nrow(unique.vK.estim)) {
+  test <-
+    matrix(
+      unique.vK.estim[i, ],
+      ncol = 2,
+      nrow = nrow(v_K_estimJoin),
+      byrow = T
+    )
+  tab[i] <- sum(rowSums(test == v_K_estimPlFl) == 2)
+}
+library(xtable)
+xtable(cbind(unique.vK.estim, t(t(tab))),digits=0)
+
+
+unique.vK.estim <- unique.matrix(v_K_estimPlAn)
+tab <- rep(0, nrow(unique.vK.estim))
+for (i in 1:nrow(unique.vK.estim)) {
+  test <-
+    matrix(
+      unique.vK.estim[i, ],
+      ncol = 2,
+      nrow = nrow(v_K_estimPlAn),
+      byrow = T
+    )
+  tab[i] <- sum(rowSums(test == v_K_estimPlAn) == 2)
+}
+library(xtable)
+xtable(cbind(unique.vK.estim, t(t(tab))),digits=0)
+
+
+unique.vK.estim <- unique.matrix(v_K_estimPlSe)
+tab <- rep(0, nrow(unique.vK.estim))
+for (i in 1:nrow(unique.vK.estim)) {
+  test <-
+    matrix(
+      unique.vK.estim[i, ],
+      ncol = 2,
+      nrow = nrow(v_K_estimPlAn),
+      byrow = T
+    )
+  tab[i] <- sum(rowSums(test == v_K_estimPlSe) == 2)
+}
+library(xtable)
+xtable(cbind(unique.vK.estim, t(t(tab))),digits=0)
+
+
+unique.vK.estim <- unique.matrix(v_K_estimPlFlAn)
+tab <- rep(0, nrow(unique.vK.estim))
+for (i in 1:nrow(unique.vK.estim)) {
+  test <-
+    matrix(
+      unique.vK.estim[i, ],
+      ncol = 3,
+      nrow = nrow(v_K_estimPlAn),
+      byrow = T
+    )
+  tab[i] <- sum(rowSums(test == v_K_estimPlFlAn) == 3)
+}
+library(xtable)
+xtable(cbind(unique.vK.estim, t(t(tab))),digits=0)
+
+unique.vK.estim <- unique.matrix(v_K_estimPlFlSe)
+tab <- rep(0, nrow(unique.vK.estim))
+for (i in 1:nrow(unique.vK.estim)) {
+  test <-
+    matrix(
+      unique.vK.estim[i, ],
+      ncol = 3,
+      nrow = nrow(v_K_estimPlAn),
+      byrow = T
+    )
+  tab[i] <- sum(rowSums(test == v_K_estimPlFlSe) == 3)
+}
+library(xtable)
+xtable(cbind(unique.vK.estim, t(t(tab))),digits=0)
+
+
+
+unique.vK.estim <- unique.matrix(v_K_estimPlAnSe)
+tab <- rep(0, nrow(unique.vK.estim))
+for (i in 1:nrow(unique.vK.estim)) {
+  test <-
+    matrix(
+      unique.vK.estim[i, ],
+      ncol = 3,
+      nrow = nrow(v_K_estimPlAn),
+      byrow = T
+    )
+  tab[i] <- sum(rowSums(test == v_K_estimPlAnSe) == 3)
+}
+library(xtable)
+xtable(cbind(unique.vK.estim, t(t(tab))),digits=0)
+
 
 

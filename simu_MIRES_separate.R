@@ -75,12 +75,12 @@ library(reshape2)
 library(ggplot2)
 library(gridExtra)
 
-dfARIfarm = data.frame(Rel = resComparRel[,1],Inv=resComparInv[,1],RelInv = resComparJoin[,1])
+dfARIfarm = data.frame(Circ = resComparRel[,1],Inv=resComparInv[,1],CircInv = resComparJoin[,1])
 dfARIfarm = melt(dfARIfarm,value.name = "ARI",variable.name = "Data")
 p1=ggplot(dfARIfarm,aes(x=Data,y=ARI)) +geom_boxplot() +theme_bw() + ylim(c(0,1)) + ggtitle("Farmers clustering")
 
 
-dfARIplant = data.frame(Inv=resComparInv[,2],RelInv = resComparJoin[,2])
+dfARIplant = data.frame(Inv=resComparInv[,2],CircInv = resComparJoin[,2])
 dfARIplant = melt(dfARIplant,value.name = "ARI",variable.name = "Data")
 p2 =ggplot(dfARIplant,aes(x=Data,y=ARI)) +geom_boxplot() +theme_bw() + ylim(c(0,1)) + ggtitle("Species clustering")
 
